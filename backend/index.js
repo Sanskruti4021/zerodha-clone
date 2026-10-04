@@ -13,6 +13,7 @@ const { OrdersModel } = require("./model/OrdersModel");
 const { UserModel } = require("./model/UserModel");
 
 const PORT = process.env.PORT || 3002;
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://127.0.0.1:8000";
 const uri = process.env.MONGO_URL;
 
 const app = express();
@@ -368,6 +369,80 @@ app.get("/profile", authenticateToken, async (req, res) => {
     });
   }
 });
+
+// Get the list of stocks supported by the ML service
+app.get("/api/ml/stocks", authenticateToken, async (req, res) => {
+  try {
+    const response = await fetch(`${ML_SERVICE_URL}/api/stocks`);
+
+    if (!response.ok) {
+      return res.status(502).json({
+        message: "ML service failed to fetch stocks",
+      });
+    }
+
+    const data = await response.json();
+
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error("ML stocks error:", error.message);
+
+    return res.status(502).json({
+      message: "Unable to connect to ML service",
+    });
+  }
+});
+
+
+// Get ML insights for a particular stock
+app.get(
+  "/api/ml/insights/:symbol",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { symbol } = req.params;
+
+      // Allow only symbols supported by our ML service
+      const allowedSymbols = [
+        "HUL",
+        "INFY",
+        "KPITTECH",
+        "M&M",
+        "ONGC",
+        "QUICKHEAL",
+        "RELIANCE",
+        "TCS",
+        "WIPRO",
+      ];
+
+      if (!allowedSymbols.includes(symbol)) {
+        return res.status(400).json({
+          message: "Unsupported stock symbol",
+        });
+      }
+
+      const response = await fetch(
+        `${ML_SERVICE_URL}/api/insights/${encodeURIComponent(symbol)}`
+      );
+
+      if (!response.ok) {
+        return res.status(502).json({
+          message: "ML service failed to fetch stock insights",
+        });
+      }
+
+      const data = await response.json();
+
+      return res.status(200).json(data);
+    } catch (error) {
+      console.error("ML insights error:", error.message);
+
+      return res.status(502).json({
+        message: "Unable to connect to ML service",
+      });
+    }
+  }
+);
 
 app.post("/newOrder", async (req, res) => {
   let newOrder = new OrdersModel({

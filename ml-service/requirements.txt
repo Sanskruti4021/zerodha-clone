@@ -1,0 +1,20 @@
+# ml-service/requirements.txt
+# Target: Python 3.14. Each range stays inside one minor series,
+# so you get bug fixes but not surprise breaking changes.
+
+# --- Data and machine learning ---
+numpy>=2.5.2,<2.6
+pandas>=3.0.5,<3.1
+scikit-learn>=1.9,<1.10
+joblib>=1.5,<2
+
+# --- One-time data download (Stage 1C) ---
+yfinance>=1.7.0,<1.8
+
+# --- API service (later stage) ---
+fastapi>=0.141.1,<0.142
+uvicorn>=0.49,<0.50
+python-dotenv>=1.2,<2
+
+# --- Testing ---
+pytest>=8.4
